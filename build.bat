@@ -1,6 +1,6 @@
 @echo off
 
-CALL D:\RunTime\php5\runtime set
+CALL D:\RunTime\php7\runtime set
 CLS && CD /d %~dp0
 
 echo ≥ı ºªØ...

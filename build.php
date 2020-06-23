@@ -6,43 +6,45 @@ date_default_timezone_set('Asia/Shanghai');
 
 is_dir('./data') || mkdir('./data');
 
-confirm("¼ÌĞø²Ù×÷½«¸²¸ÇÔ­Êı¾İ,ÇëÈ·ÈÏ") || exit;
+confirm("ç»§ç»­æ“ä½œå°†è¦†ç›–åŸæ•°æ®,è¯·ç¡®è®¤") || exit;
 
 ////////////////////////////////////////////////////
 
-//¿ªÊ¼Ê±¼ä
+//å¼€å§‹æ—¶é—´
 $time1 = time();
 
-echo("»ñÈ¡APNICÊı¾İ\n");
+echo "è·å–APNICæ•°æ®\n";
 $apnic = get_apnic_data();
 
-echo("»ñÈ¡ÖĞ¹úIPv4µØÖ·\n");
+echo "è·å–ä¸­å›½IPv4åœ°å€\n";
 get_country_ipv4('china', 'cn', $apnic);
 
-echo("»ñÈ¡º£ÍâIPv4µØÖ·\n");
+echo "è·å–æµ·å¤–IPv4åœ°å€\n";
 get_country_ipv4('oversea', '(?!cn)\w{2}', $apnic);
 
-//¼ÆËãºÄÊ±
+//è®¡ç®—è€—æ—¶
 $time2 = time() - $time1;
-echo("\n\n[+] ×ª»»¹ı³ÌÏûºÄÊ±³¤Ô¼Îª{$time2}Ãë.");
+echo "\n\n[+] è½¬æ¢è¿‡ç¨‹æ¶ˆè€—æ—¶é•¿çº¦ä¸º{$time2}ç§’.";
 
 ////////////////////////////////////////////////////
 
 /**
- * Ñ¯ÎÊ²Ù×÷
+ * è¯¢é—®æ“ä½œ
  */
-function confirm($text) {
-    echo("{$text}[yes/no]: ");
-    $stat = trim(fgets(STDIN));
-    return $stat == 'y' || $stat == 'yes';
+function confirm($text)
+{
+	echo "{$text}[yes/no]: ";
+	$stat = trim(fgets(STDIN));
+	return $stat == 'y' || $stat == 'yes';
 }
 
 /**
- * »ñÈ¡APNICÊı¾İ
+ * è·å–APNICæ•°æ®
  */
-function get_apnic_data() {
+function get_apnic_data()
+{
 	$file = './data/apnic.txt';
-	if(is_file($file) && filectime($file) > strtotime('-1 day')) {
+	if (is_file($file) && filectime($file) > strtotime('-1 day')) {
 		return file_get_contents($file);
 	}
 	$site = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest';
@@ -51,20 +53,21 @@ function get_apnic_data() {
 }
 
 /**
- * »ñÈ¡Ö¸¶¨¹ú¼ÒIPv4µØÖ·
+ * è·å–æŒ‡å®šå›½å®¶IPv4åœ°å€
  */
-function get_country_ipv4($name, $expr, &$data) {
+function get_country_ipv4($name, $expr, &$data)
+{
 	$expr = "/apnic\|{$expr}\|ipv4\|([0-9\.]+\|[0-9]+)\|[0-9]+\|a.*/i";
 	preg_match_all($expr, $data, $match);
 	$rest = array(array(), array());
-	foreach($match[1] as $val) {
+	foreach ($match[1] as $val) {
 		list($net, $ips) = explode('|', $val);
-		$rest[0][] = $net.'/'.(32 - log($ips, 2));
-		$rest[1][] = $net.'/'.(long2ip(ip2long('255.255.255.255') << log($ips, 2)));
+		$rest[0][] = $net . '/' . (32 - log($ips, 2));
+		$rest[1][] = $net . '/' . (long2ip(ip2long('255.255.255.255') << log($ips, 2)));
 	}
 	file_put_contents("./data/apnic_{$name}_0_v4.txt", implode("\n", $rest[0]));
 	file_put_contents("./data/apnic_{$name}_1_v4.txt", implode("\n", $rest[1]));
-	//Éú³ÉLinuxÂ·ÓÉ±í
+	//ç”ŸæˆLinuxè·¯ç”±è¡¨
 	$route = 'route add -net $1 netmask $2 gw ${gwip}';
 	$route =  preg_replace('@([^/]+)/([^/]+)@', $route, $rest[1]);
 	file_put_contents("./data/apnic_{$name}_v4_linux_route.add", implode("\n", $route));
@@ -73,48 +76,57 @@ function get_country_ipv4($name, $expr, &$data) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * IPv4µØÖ·×ª»»Àà
+ * IPv4åœ°å€è½¬æ¢ç±»
  * $ip = new ipv4('192.168.2.1', 24);
  */
 
-class ipv4 {
-	//±äÁ¿±í
+class ipv4
+{
+	//å˜é‡è¡¨
 	private $address;
 	private $netbits;
-	//¹¹Ôìº¯Êı
-	public function __construct($address, $netbits, $type = '') {
+	//æ„é€ å‡½æ•°
+	public function __construct($address, $netbits, $type = '')
+	{
 		$this->address = $address;
 		$this->netbits = $netbits;
-		if($type == 'netips') {
+		if ($type == 'netips') {
 			$this->set_netbits_by_netips();
 		}
 	}
-	//»ñÈ¡IPµØÖ·
-	public function address() {
+	//è·å–IPåœ°å€
+	public function address()
+	{
 		return ($this->address);
 	}
-	//»ñÈ¡ÑÚÂëÎ»Êı
-	public function netbits() {
+	//è·å–æ©ç ä½æ•°
+	public function netbits()
+	{
 		return ($this->netbits);
 	}
-	//»ñÈ¡ÍøÂçÑÚÂë
-	public function netmask() {
+	//è·å–ç½‘ç»œæ©ç 
+	public function netmask()
+	{
 		return (long2ip(ip2long('255.255.255.255') << (32 - $this->netbits)));
 	}
-	//»ñÈ¡·´ÑÚÂë
-	public function inverse() {
-		return (long2ip( ~ (ip2long('255.255.255.255') << (32 - $this->netbits))));
+	//è·å–åæ©ç 
+	public function inverse()
+	{
+		return (long2ip(~(ip2long('255.255.255.255') << (32 - $this->netbits))));
 	}
-	//»ñÈ¡×ÓÍøµØÖ·
-	public function network() {
+	//è·å–å­ç½‘åœ°å€
+	public function network()
+	{
 		return (long2ip((ip2long($this->address)) & (ip2long($this->netmask()))));
 	}
-	//»ñÈ¡¹ã²¥µØÖ·
-	public function broadcast() {
-		return (long2ip(ip2long($this->network()) | ( ~ (ip2long($this->netmask())))));
+	//è·å–å¹¿æ’­åœ°å€
+	public function broadcast()
+	{
+		return (long2ip(ip2long($this->network()) | (~(ip2long($this->netmask())))));
 	}
-	//¸ù¾İ¿ÉÓÃIP»ñÈ¡ÑÚÂëÎ»Êı
-	private function set_netbits_by_netips() {
+	//æ ¹æ®å¯ç”¨IPè·å–æ©ç ä½æ•°
+	private function set_netbits_by_netips()
+	{
 		$this->netbits = 32 - log($this->netbits, 2);
 	}
 }
