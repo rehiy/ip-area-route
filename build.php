@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Author: rehiy <https://www.rehiy.com>
+ */
+
 chdir(__DIR__);
 
 date_default_timezone_set('Asia/Shanghai');
