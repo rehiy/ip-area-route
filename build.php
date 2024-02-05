@@ -10,8 +10,6 @@ date_default_timezone_set('Asia/Shanghai');
 
 is_dir('./data') || mkdir('./data');
 
-confirm("继续操作将覆盖原数据,请确认") || exit;
-
 ////////////////////////////////////////////////////
 
 //开始时间
